@@ -72,6 +72,8 @@ def main() :
     solve_one()
     board = boards.hard_board()
     solve_one()
+    board = boards.really_hard_board()
+    solve_one()
 
 if __name__ == '__main__' :
     main()
