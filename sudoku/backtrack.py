@@ -1,18 +1,8 @@
 #!/usr/bin/env python
 import sys
 import math
-def test_board() :
-    test1 = [["5","3",".",".","7",".",".",".","."],\
-             ["6",".",".","1","9","5",".",".","."],\
-             [".","9","8",".",".",".",".","6","."],\
-             ["8",".",".",".","6",".",".",".","3"],\
-             ["4",".",".","8",".","3",".",".","1"],\
-             ["7",".",".",".","2",".",".",".","6"],\
-             [".","6",".",".",".",".","2","8","."],\
-             [".",".",".","4","1","9",".",".","5"],\
-             [".",".",".",".","8",".",".","7","9"]]
+import boards
 
-    return test1
 
 def box_index(r, c) :
     return (r // 3) * 3 + c // 3
@@ -24,21 +14,6 @@ def test_box_index() :
         for j in range(N) :
             s += str(box_index(i, j)) + " "
         print s
-
-def print_board(b) :
-    print "-" * 24
-    N = len(b)
-    n = int(math.sqrt(N))
-    for i in range(N) :
-        if i % n == 0 :
-            print "-" * 22
-        s = ""
-        for j in range(N) :
-            if j % n == 0 :
-                s += "| "
-            s += str(b[i][j])
-        print s + " |"
-    print "-" * 24
 
 def fill_number(n, r, c) :
     global board, rows, cols, boxes
@@ -59,7 +34,7 @@ def erase_number(r, c) :
 def could_place(d, r, c) :
     global rows, cols, boxes
     idx = d-1
-    return not ( rows[r][idx] == 1 or cols[c][idx] == 1 or  boxes[box_index(r,c)][idx] == 1 )
+    return not ( rows[r][idx] == 1 or cols[c][idx] == 1 or boxes[box_index(r,c)][idx] == 1 )
 
 
 def backtrack(r, c) :
@@ -71,10 +46,14 @@ def backtrack(r, c) :
             if could_place(d, r, c) :
                 fill_number(d, r, c)
                 if r == N-1 and c == N-1:
-                    solved == True
+                    solved = True
                 elif c == N-1:
+                    if r == 6 and board[0][6] == '6' and board[0][7] == '5' :
+                        boards.print_board(board)
                     backtrack(r+1, 0)
                 else :
+                    if r == 8 and board[5][3] == '1' and board[0][7] == '5' :
+                        boards.print_board(board)
                     backtrack(r, c+1)
 
                 if not solved :
@@ -84,6 +63,7 @@ def backtrack(r, c) :
     else :
         if r == N-1 and c == N-1:
             solved = True
+            return
         elif c == N-1 :
             backtrack(r+1, 0)
         else :
@@ -101,19 +81,20 @@ def solve_one() :
             if board[i][j] != '.' :
                 fill_number(int(board[i][j]), i, j)
 
-    print_board(board)
-    # test_box_index()
+    boards.print_board(board)
     solved = False
     backtrack(0 ,0)
     if solved :
         print "Solved !!!"
-        print_board(board)
+        boards.print_board(board)
     else :
         print "Unsatisfiable !!!"
 
 def main() :
     global board
-    board = test_board()
+    board = boards.test_board()
+    solve_one()
+    board = boards.hard_board()
     solve_one()
 
 if __name__ == '__main__' :

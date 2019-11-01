@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import sys
 import math
+import boards
+from z3 import *
 def test_board() :
     test1 = [["5","3",".",".","7",".",".",".","."],\
              ["6",".",".","1","9","5",".",".","."],\
@@ -25,42 +27,50 @@ def test_box_index() :
             s += str(box_index(i, j)) + " "
         print s
 
-def print_board(b) :
-    print "-" * 24
-    N = len(b)
-    n = int(math.sqrt(N))
-    for i in range(N) :
-        if i % n == 0 :
-            print "-" * 22
-        s = ""
-        for j in range(N) :
-            if j % n == 0 :
-                s += "| "
-            s += str(b[i][j])
-        print s + " |"
-    print "-" * 24
-
-
 def solve_one() :
-    """
-    a11 a12 a13 | b14 b15 b16 | c17 c18 c19
-    a21 a22 a23 | b24 b25 b26 | c27 c28 c29
-    a31 a32 a33 | b34 b35 b36 | c37 c38 c39
-    ---------------------------------------
-    d41 d42 d43 | e44 e45 e46 | f47 f48 f49
-    d51 d52 d53 | e54 e55 e66 | f57 f58 f59
-    d61 d62 d63 | e64 e65 e66 | f67 f68 f69
-    ---------------------------------------
-    g71 g72 g73 | h74 h75 h76 | i77 i78 i79
-    g81 g82 g83 | h84 h85 h86 | i87 i88 i89
-    g91 g92 g93 | h94 h95 h96 | i97 i98 i99
+    global board
+    boards.print_board(board)
+    # 9x9 matrix of integer variables
+    X = [ [ Int("x_%s_%s" % (i+1, j+1)) for j in range(9)  ]
+                  for i in range(9) ]
 
-    """
-    a11 =
+    # each cell contains a value in {1, ..., 9}
+    cells_c  = [ And(1 <= X[i][j], X[i][j] <= 9)
+                         for i in range(9) for j in range(9) ]
+
+    # each row contains a digit at most once
+    rows_c   = [ Distinct(X[i]) for i in range(9)  ]
+
+    # each column contains a digit at most once
+    cols_c   = [ Distinct([ X[i][j] for i in range(9)  ])
+                         for j in range(9) ]
+
+    # each 3x3 square contains a digit at most once
+    sq_c     = [ Distinct([ X[3*i0 + i][3*j0 + j]
+                                for i in range(3) for j in range(3) ])
+                                             for i0 in range(3) for j0 in range(3) ]
+
+    sudoku_c = cells_c + rows_c + cols_c + sq_c
+    board_c  = [ If(board[i][j] == '.', True, X[i][j] == (ord(board[i][j]) - 0x30) ) for i in range(9) for j in range(9) ]
+
+    s = Solver()
+    s.add(sudoku_c + board_c)
+    if s.check() == sat :
+        m= s.model()
+        # r = [ [m.evaluate(X[i][j]) for j in range(9)] for i in range(9) ]
+        #print_matrix(r)
+        for i in range(9) :
+            for j in range(9) :
+                board[i][j] = m.evaluate(X[i][j])
+        boards.print_board(board)
+    else :
+        print "failed to solve"
 
 def main() :
     global board
-    board = test_board()
+    board = boards.test_board()
+    solve_one()
+    board = boards.hard_board()
     solve_one()
 
 if __name__ == '__main__' :

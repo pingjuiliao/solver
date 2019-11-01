@@ -4,7 +4,6 @@ from z3 import *
 
 x = Int('x')
 y = Int('y')
-
 s = Solver()
 print s
 
