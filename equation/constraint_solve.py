@@ -1,23 +1,49 @@
 #!/usr/bin/python
 from z3 import *
 
-
 def stoi(_str) :
     length = 0
-    while _str[length] in "0123456789" :
+    L = len(_str)
+    while length < L and _str[length] in "0123456789" :
         length += 1
     return int(_str[:length]), length
 
+def evaluate(left, operator, right) :
+    val = None
+    ## print "evaluating ", left, operator, right
+    if operator == "+" :
+        val = left + right
+    elif operator == "-" :
+        val = left - right
+    elif operator == "*" :
+        val = left * right
+    elif operator == "/" :
+        val = left / right
+    else :
+        print "Wrong Operator %s" % operator
+        quit()
+
+    if val > 2147483647 or val < -2147483648 :
+        print "Overflow !! %d" % val
+        quit()
+    return val
+
 def solve_one(s) :
-    L = len(s)
-    Nums = [ Int("s_%s" % str(i)) for i in range(L) ]
+    global syms
+    syms = [ Int("s_%s" % str(i)) for i in range(L) ]
 
     ## simulate the control flow of CROMU_00017
     i = is_neg = 0
     operStack = []
     numStack = []
     while i < L :
+
         curr = s[i]
+
+        ## switch
+        if curr == " " :
+            i+= 1
+            continue
         if curr in "0123456789" :
             if operStack and s[i] == '-' :
                 operStack.pop('-')
@@ -46,7 +72,7 @@ def solve_one(s) :
                 rarg =  numStack.pop()
                 larg =  numStack.pop()
                 op   = operStack.pop()
-                push_num(eval(" ".join([larg, op, rarg])))
+                numStack.append(evaluate(larg, op, rarg))
                 op   = operStack[-1]
             if op == '(' :
                 operStack.pop()
@@ -55,27 +81,38 @@ def solve_one(s) :
             continue
         if curr == '+' or curr == '-' :
             prev_op = None if not operStack else operStack[-1]
-            if p_op in "+-*/" :
+            if prev_op and prev_op in "+-*/" :
                 rarg = numStack.pop()
                 larg = numStack.pop()
                 prev_op = operStack.pop()
-                operStack.append(eval(" ".join[larg, prev_op, rarg]))
+                numStack.append(evaluate(larg, prev_op, rarg))
 
             operStack.append(curr)
             i += 1
             continue
         if curr == '*' or curr == '/' :
             prev_op = None if not operStack else operStack[-1]
-            if prev_op in '*/' :
+            if prev_op and prev_op in '*/' :
                 rarg = numStack.pop()
                 larg = numStack.pop()
                 prev_op = operStack.pop()
-                operStack.append(eval(" ".join[larg, prev_op, rarg]))
+                numStack.append(evaluate(larg, prev_op, rarg))
 
             operStack.append(curr)
             i += 1
             continue
-    return 1
+
+    ## end of while
+    b = None if not numStack else numStack.pop()
+    while operStack :
+        a  = numStack.pop()
+        op = operStack.pop()
+        #tmp  = eval(" ".join([str(a), op, str(b)]))
+        tmp = evaluate(a, op, b)
+        b = tmp
+
+    return b
+
 def get_equations() :
     global index
     with open("equations.txt", "rb") as f :
