@@ -29,11 +29,10 @@ def evaluate(left, operator, right) :
     return val
 
 def solve_one(s) :
-    global syms
-    syms = [ Int("s_%s" % str(i)) for i in range(L) ]
 
     ## simulate the control flow of CROMU_00017
     i = is_neg = 0
+    L = len(s)
     operStack = []
     numStack = []
     while i < L :
