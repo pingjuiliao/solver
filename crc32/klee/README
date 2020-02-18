@@ -1,0 +1,21 @@
+## run docker first
+```
+# in this directory
+./klee_docker.sh
+```
+
+
+## compile the crc32_symbol.c in docker
+```
+# we would be redirect to /home/klee/ in the klee/klee docker
+# the directory would be mounted to /home/klee/app, so
+./app/compile.sh
+
+# than we will get a file called "crc32_symbols.bc"
+klee crc32_symbols.bc
+sleep 1
+ktest-tool klee-last/ktest000001.ktest
+
+```
+
+
